@@ -86,4 +86,3 @@ class subjectPage(ctk.CTkFrame):
         self.DB.addSubject(self.Subj_name.get())
         self.Dataview()
         self.Subj_name.delete(0,'end')
-        

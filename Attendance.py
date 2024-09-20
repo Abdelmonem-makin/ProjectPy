@@ -57,38 +57,38 @@ def findEncoding(images):
     return imgEncodings
 
 
-def db_thread_func(q,Subject):
+def db_thread_func(q, Subject):
     while True:
-
-
         name, rollNumber = q.get()
-        # print(roll_Num)
         if name is None:
             break
         with sqlite3.connect('Attandans.db') as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM Attendance WHERE rollNum = ? AND Day = ?",
-                           (rollNumber, datetime.now().strftime('%Y-%m-%d')))
+            today = datetime.now().strftime('%d-%m-%Y')
+
+            # Check if the student already has an attendance record for today
+            cursor.execute("SELECT * FROM Attendance WHERE rollNum = ? AND Day = ?", (rollNumber, datetime.now().strftime('%d-%m-%Y')))
             result = cursor.fetchone()
+
             if result is None:
-                now = datetime.now()
-                data = now.strftime('%d-%m-%Y')
-                # AttendanceFun.addAttendance(name, 'OOP', 'makin',data , '')
+                # Insert a new record if none exists
                 cursor.execute(
-                    'INSERT OR REPLACE INTO Attendance (Std_name, Subject_name, Admin, Day, RollNum) VALUES (?,?,?,?,?)',
-                    (name,Subject, 'Admin', data, rollNumber))
-                conn.commit()
-            # else:
-            #     cursor.execute("UPDATE Attendance SET count_atten = count_atten + 1 WHERE rollNum = ? AND Day = ?",
-            #                    (rollNumber, datetime.now().strftime('%Y-%m-%d')))
-            # conn.commit()
+                    'INSERT INTO Attendance (Std_name, Subject_name, Admin, Day, RollNum, count_attend) VALUES (?,?,?,?,?,?)',
+                    (name, Subject, 'Admin', today, rollNumber, 1))
+            else:
+                # Update the existing record
+                cursor.execute("UPDATE Attendance SET count_attend = count_attend + 1 WHERE rollNum = ? AND Day = ?",
+                               (rollNumber, today))
+
+            # Commit the transaction
+            conn.commit()
 
 
 def Attendance(vid, studentImg, studentName, roll_Number, findEncoding, q):
     EncodeList = findEncoding(studentImg)
     global running
     running = True
-
+    counted_students = set()
     while running:
         success, frame = vid.read()
         Smaller_frames = cv2.resize(frame, (0, 0), None, 0.25, 0.25)
@@ -104,12 +104,14 @@ def Attendance(vid, studentImg, studentName, roll_Number, findEncoding, q):
                 name = studentName[matchIndex].upper()
                 rollNum = roll_Number[matchIndex].upper()
                 # print(rollNum)
-                y1, x2, y2, x1 = faceloc
-                y1, x2, y2, x1 = y1 * 4, x2 * 4, y2 * 4, x1 * 4
-                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 3)
-                cv2.rectangle(frame, (x1, y2 - 25), (x2, y2), (0, 255, 0), cv2.FILLED)
-                cv2.putText(frame, name, (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
-                q.put((name, rollNum))
+                if rollNum not in counted_students:
+                    counted_students.add(rollNum)
+                    y1, x2, y2, x1 = faceloc
+                    y1, x2, y2, x1 = y1 * 4, x2 * 4, y2 * 4, x1 * 4
+                    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 3)
+                    cv2.rectangle(frame, (x1, y2 - 25), (x2, y2), (0, 255, 0), cv2.FILLED)
+                    cv2.putText(frame, name, (x1 + 6, y2 - 6), cv2.FONT_HERSHEY_COMPLEX, 1, (255, 255, 255), 2)
+                    q.put((name, rollNum))
 
         cv2.imshow('video', frame)
         if cv2.waitKey(1) & 0xFF == ord('q'):

@@ -31,7 +31,7 @@ class AttendancePage(ctk.CTkFrame):
         self.scrollable_frame2.configure(width=675,height=100 ,fg_color="transparent")
         self.scrollable_frame2.pack_propagate(False)
         self.scrollable_frame2.pack(side="left" , padx=8,pady=8, fill="both", expand="true")
-        headers = ['rollNum','Std Name',"Subject", 'Superviser', 'Time']
+        headers = ['rollNum','Std Name',"Subject","count_attendance", 'Superviser', 'Time']
         for col, header in enumerate(headers):
             self.label = ctk.CTkLabel(self.scrollable_frame2,fg_color= 'dark blue',text_color='white',width=110,corner_radius=3, text=header,font=("Arial", 12, "bold"))
             self.label.grid(row=0, column=col, padx=1, pady=1)

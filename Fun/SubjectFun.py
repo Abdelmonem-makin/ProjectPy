@@ -25,3 +25,11 @@ class SubjecFun:
       stdReselt = self.cursor.execute("SELECT Subject_name FROM subject")
       self.conn.commit()
       return stdReselt
+
+    def count_all_rows(self):
+        with sqlite3.connect('Attandans.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM subject")
+            result = cursor.fetchone()
+            res = f"Total subject \n\n {result[0]}"
+            return res

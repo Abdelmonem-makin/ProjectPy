@@ -25,3 +25,12 @@ class teacherFun:
       stdReselt = self.cursor.execute("SELECT name FROM teacher")
       self.conn.commit()
       return stdReselt
+
+
+    def count_all_rows(self):
+        with sqlite3.connect('Attandans.db') as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM teacher")
+            result = cursor.fetchone()
+            res = f"Total teacher \n\n {result[0]}"
+            return res
